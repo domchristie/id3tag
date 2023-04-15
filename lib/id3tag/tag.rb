@@ -89,11 +89,24 @@ module ID3Tag
     end
 
     def table_of_contents
-      get_frames(:CTOC)
+      table_of_contents_frames = get_frames(:CTOC)
+
+      top_level_frame = if table_of_contents_frames.length == 1
+        table_of_contents_frames.first
+      else
+        table_of_contents_frames.find { |frame| frame.top_level? }
+      end
+
+      TableOfContents.new(top_level_frame, tag: self) if top_level_frame
     end
 
     def chapters
-      get_frames(:CHAP)
+      get_frames(:CHAP).map { |frame| Chapter.new(frame) }
+    end
+
+    def get_table_of_contents_element_frame(element_id)
+      frames = get_frames(:CTOC) + get_frames(:CHAP)
+      frames.find { |frame| frame.element_id == element_id }
     end
 
     private
